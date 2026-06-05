@@ -15,6 +15,7 @@
 #include "audio_service.h"
 #include "assets/lang_config.h"
 #include "led/circular_strip.h"
+#include "display/display.h"
 
 class ServoController
 {

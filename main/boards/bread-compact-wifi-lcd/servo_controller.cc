@@ -380,8 +380,9 @@ void ServoController::uartInit()
 }
 
 // 协议如下：
-// std::string setLedCmd = "[deng-0-32-32-32]";(index-r-g-b)
-// std::string setMotorCmd = "[dianji-90-90-90-90-90-90-200]";(servo1-servo2-servo3-servo4-servo5-servo6-delay)
+// "[deng-0-32-32-32]";(index-r-g-b)
+// "[dianji-90-90-90-90-90-90-200]";(servo1-servo2-servo3-servo4-servo5-servo6-delay)
+// "[pingmu-电机开始转动]"
 void ServoController::scratch2RobPro()
 {
 	char getChar = ' ';
@@ -417,7 +418,6 @@ void ServoController::scratch2RobPro()
 				return;
 			}
 			ledColor[i] = stoi(getString);
-			ESP_LOGI(TAG, "\nyp: %d ,\n", ledColor[i]);
 			Application::GetInstance().Schedule([=]() {
 			CircularStrip::GetInstance().SetSingleColor(ledColor[0], StripColor(ledColor[1], ledColor[2], ledColor[3]));
 			vTaskDelay(pdMS_TO_TICKS(50));
@@ -435,7 +435,6 @@ void ServoController::scratch2RobPro()
 			{
 				getString = getString.substr(getString.find("-") + 1);
 				danceFrame[i] = stoi(getString);
-				ESP_LOGW(TAG, "%d, ", danceFrame[i]);
 			}
 			else
 			{
@@ -445,5 +444,23 @@ void ServoController::scratch2RobPro()
 		}
 		danceSeq.push_back(danceFrame);
 		smoothAndSetServoAngle(danceSeq);
+	}
+	else if ((getString.find("pingmu")) != std::string::npos)
+	{
+		if ((getString.find("-")) != std::string::npos)
+		{
+			getString = getString.substr(getString.find("-") + 1);
+			if (!getString.empty() && getString.back() == ']')
+			{
+				// 去掉最后一个字符 ]
+        		getString.pop_back();
+    		}
+		}
+		else
+		{
+				ESP_LOGW(TAG, "未找到pingmu的-");
+				return;
+		}
+		Board::GetInstance().GetDisplay()->SetChatMessage("user", getString.c_str());
 	}
 }
